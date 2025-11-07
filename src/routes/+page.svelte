@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { createModel, type KaldiRecognizer, type Model } from 'vosk-browser';
+	import { base } from '$app/paths';
 	
 	let isRecording = false;
 	let isLoading = true;
@@ -19,7 +20,7 @@
 		try {
 			// 创建 Vosk 模型 - 从本地加载
 			// 模型文件需要放在 static/models/ 目录下
-			model = await createModel('/models/vosk-model-small-cn-0.22.zip');
+			model = await createModel(`${base}/models/vosk-model-small-cn-0.22.zip`);
 			
 			recognizer = new model.KaldiRecognizer(16000);
 			recognizer.setWords(true);
@@ -76,7 +77,7 @@
 			}
 			
 			// 创建音频处理节点
-			await audioContext.audioWorklet.addModule('/audio-processor.js');
+			await audioContext.audioWorklet.addModule(`${base}/audio-processor.js`);
 			audioWorkletNode = new AudioWorkletNode(audioContext, 'audio-processor', {
 				processorOptions: {
 					targetSampleRate: 16000,
