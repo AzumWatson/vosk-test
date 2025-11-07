@@ -15,7 +15,11 @@ const config = {
 			fallback: 'index.html',
 			precompress: false,
 			strict: true
-		})
+		}),
+		// 配置 GitHub Pages 的 base path
+		paths: {
+			base: process.env.NODE_ENV === 'production' ? '/vosk-test' : ''
+		}
 	}
 };
 
