@@ -1,0 +1,7 @@
+# 忽略所有模型文件（通常较大）
+*.zip
+*.tar.gz
+
+# 但保留 README 说明文件
+!README.md
+!.gitignore
