@@ -50,14 +50,16 @@ class AudioProcessor extends AudioWorkletProcessor {
 				
 				// 当缓冲区满时，发送数据
 				if (this.bufferIndex >= this.bufferSize) {
-					// 转换为 16 位整数 PCM
-					const pcm16 = new Int16Array(this.bufferSize);
-					for (let j = 0; j < this.bufferSize; j++) {
-						const s = Math.max(-1, Math.min(1, this.buffer[j]));
-						pcm16[j] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+					// 发送 Float32Array 给 Vosk（Vosk 需要 Float32 格式）
+					const audioData = new Float32Array(this.buffer);
+					
+					// 调试：检查音频数据
+					const avgVolume = audioData.reduce((sum, val) => sum + Math.abs(val), 0) / audioData.length;
+					if (avgVolume > 0.01) {
+						console.log('发送音频数据，平均音量:', avgVolume.toFixed(4));
 					}
 					
-					this.port.postMessage(pcm16.buffer);
+					this.port.postMessage(audioData);
 					this.bufferIndex = 0;
 				}
 				

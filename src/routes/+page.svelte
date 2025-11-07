@@ -27,14 +27,17 @@
 			
 			// 监听识别结果
 			recognizer.on('result', (message: any) => {
+				console.log('Vosk 完整结果:', message);
 				const result = message.result;
 				if (result.text) {
 					transcript += result.text + '\n';
 					partialTranscript = '';
+					console.log('识别文本:', result.text);
 				}
 			});
 			
 			recognizer.on('partialresult', (message: any) => {
+				console.log('Vosk 部分结果:', message);
 				partialTranscript = message.result.partial;
 			});
 			
@@ -91,9 +94,21 @@
 			// audioWorkletNode.connect(audioContext.destination);
 			
 			// 处理音频数据
-			audioWorkletNode.port.onmessage = (event) => {
-				if (recognizer) {
-					recognizer.acceptWaveform(event.data);
+			audioWorkletNode.port.onmessage = async (event) => {
+				if (recognizer && audioContext) {
+					// 将 Float32Array 转换为 AudioBuffer
+					const float32Data = event.data;
+					console.log('收到音频数据:', float32Data.length, '采样');
+					
+					const audioBuffer = audioContext.createBuffer(1, float32Data.length, 16000);
+					audioBuffer.getChannelData(0).set(float32Data);
+					
+					try {
+						recognizer.acceptWaveform(audioBuffer);
+						console.log('音频数据已发送到 Vosk');
+					} catch (e) {
+						console.error('Vosk 处理错误:', e);
+					}
 				}
 			};
 			
@@ -132,9 +147,16 @@
 		}
 		
 		if (recognizer) {
-			const finalResult = recognizer.finalResult() as any;
-			if (finalResult && finalResult.text) {
-				transcript += finalResult.text + '\n';
+			try {
+				// finalResult 可能是方法或属性，取决于 vosk-browser 版本
+				const finalResult = typeof recognizer.finalResult === 'function' 
+					? recognizer.finalResult() 
+					: recognizer.finalResult;
+				if (finalResult && (finalResult as any).text) {
+					transcript += (finalResult as any).text + '\n';
+				}
+			} catch (e) {
+				console.log('获取最终结果失败:', e);
 			}
 		}
 		
